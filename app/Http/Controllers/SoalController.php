@@ -5,6 +5,8 @@ use Illuminate\Http\Request;
 use App\Models\Soal;
 use App\Models\Jawaban;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Siswa;
+use App\Models\JawabanSiswa;
 use App\Http\Middleware\RoleMiddleware;
 
 class SoalController extends Controller
@@ -118,4 +120,128 @@ class SoalController extends Controller
 
         return redirect()->route('guru.dashboard')->with('success', 'Soal berhasil dihapus!');
     }
+
+    public function indexPublic()
+    {
+        // Mendapatkan sekolah user yang sedang login
+        $asalSekolah = Auth::user()->asal_sekolah;
+    
+        // Query soal berdasarkan asal sekolah guru
+        $soals = Soal::whereHas('guru', function ($query) use ($asalSekolah) {
+            $query->where('asal_sekolah', $asalSekolah);
+        })->get();
+    
+        return view('siswa.soals.index', compact('soals'));
+    }
+
+    // Menampilkan soal tertentu
+    public function showPublic($id)
+    {
+        // Ambil soal berdasarkan ID
+        $soal = Soal::findOrFail($id);
+
+        return view('siswa.soals.show', compact('soal'));
+    }
+
+    // Menyimpan jawaban siswa
+    public function submitJawaban(Request $request, $id)
+    {
+        // Validasi jawaban
+        $request->validate([
+            'jawaban' => 'required|string',
+        ]);
+
+        // Simpan jawaban siswa
+        $siswa = Auth::user();
+        $soal = Soal::findOrFail($id);
+
+        // Simpan jawaban siswa ke tabel jawaban atau logika sesuai kebutuhan
+        $soal->jawabans()->create([
+            'siswa_id' => $siswa->id,
+            'jawaban' => $request->jawaban,
+            'is_correct' => $request->is_correct, // Jika ingin memeriksa jawaban
+        ]);
+
+        return redirect()->route('soals.indexPublic')->with('success', 'Jawaban berhasil disubmit!');
+    }
+
+//     public function showQuestion($soal_id)
+// {
+//     $soal = Soal::with('jawabans')->findOrFail($soal_id);
+
+//     // Ambil soal berikutnya (berdasarkan ID)
+//     $nextSoal = Soal::where('id', '>', $soal_id)->whereHas('guru', function ($query) {
+//         $query->where('asal_sekolah', Auth::user()->asal_sekolah);
+//     })->orderBy('id')->first();
+
+//     return view('siswa.soals.question', compact('soal', 'nextSoal'));
+// }
+// public function submitAnswer(Request $request, $soal_id)
+// {
+//     $request->validate([
+//         'jawaban_id' => 'required|exists:jawabans,id',
+//     ]);
+
+//     $siswa = Auth::user();
+
+//     JawabanSiswa::create([
+//         'siswa_id' => $siswa->id,
+//         'soal_id' => $soal_id,
+//         'jawaban_id' => $request->jawaban_id,
+//     ]);
+
+//     return redirect()->route('siswa.showQuestion', $request->next_soal_id ?? $soal_id)
+//         ->with('success', 'Jawaban berhasil disimpan!');
+// }
+// public function showScore()
+// {
+//     $siswa = Auth::user();
+
+//     // Ambil semua jawaban siswa
+//     $jawabanSiswa = JawabanSiswa::where('siswa_id', $siswa->id)->get();
+
+//     // Hitung skor berdasarkan jawaban yang benar
+//     $totalSoal = $jawabanSiswa->count();
+//     $jawabanBenar = 0;
+
+//     foreach ($jawabanSiswa as $jawaban) {
+//         $jawabanModel = Jawaban::find($jawaban->jawaban_id);
+//         if ($jawabanModel && $jawabanModel->is_correct) {
+//             $jawabanBenar++;
+//         }
+//     }
+
+//     $skor = $totalSoal > 0 ? round(($jawabanBenar / $totalSoal) * 100) : 0;
+
+//     return view('siswa.score', compact('skor', 'jawabanBenar', 'totalSoal'));
+// }
+// public function submitJawaban(Request $request, $id)
+// {
+//     $request->validate([
+//         'jawaban_id' => 'required|exists:jawabans,id',
+//     ]);
+
+//     $siswa = Auth::user();
+//     $jawabanId = $request->jawaban_id;
+
+//     // Simpan jawaban siswa
+//     JawabanSiswa::create([
+//         'siswa_id' => $siswa->id,
+//         'soal_id' => $id,
+//         'jawaban_id' => $jawabanId,
+//     ]);
+
+//     // Periksa apakah ada soal berikutnya
+//     $nextSoal = Soal::where('id', '>', $id)->whereHas('guru', function ($query) {
+//         $query->where('asal_sekolah', Auth::user()->asal_sekolah);
+//     })->first();
+
+//     if ($nextSoal) {
+//         // Jika ada soal berikutnya, arahkan ke soal berikutnya
+//         return redirect()->route('siswa.showSoal', $nextSoal->id);
+//     } else {
+//         // Jika tidak ada soal lagi, arahkan ke halaman skor
+//         return redirect()->route('siswa.score')->with('success', 'Anda telah menyelesaikan semua soal.');
+//     }
+// }
 }

@@ -17,4 +17,10 @@ class Siswa extends Model
         'asal_sekolah',
         'jenjang_pendidikan',
     ];
+
+        // Relasi ke soal
+        public function soals()
+        {
+            return $this->belongsToMany(Soal::class);
+        }
 }

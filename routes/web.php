@@ -105,9 +105,17 @@ Route::middleware([RoleMiddleware::class.':guru'])->group(function () {
     Route::get('/soal/{id}', [SoalController::class, 'show'])->name('guru.showSoal');
 });
 
-// Rute untuk Siswa
+//Rute untuk Siswa
 Route::middleware(['auth'])->group(function () {
-    Route::get('/soals', [SoalController::class, 'indexPublic'])->name('soals.indexPublic'); // Menampilkan soal secara umum
+    Route::get('/soals', [SoalController::class, 'indexPublic'])->name('soals.indexPublic'); // Menampilkan soal berdasarkan asal_sekolah
     Route::get('/soal/{id}', [SoalController::class, 'showPublic'])->name('soals.showPublic'); // Detail soal untuk siswa
     Route::post('/siswa/jawaban/{id}', [SoalController::class, 'submitJawaban'])->name('siswa.submitJawaban'); // Jawaban siswa
 });
+
+// Route::middleware(['auth'])->group(function () {
+//     Route::get('/siswa/soal/{soal_id}', [SoalController::class, 'showQuestion'])->name('siswa.showQuestion');
+//     Route::post('/siswa/soal/{soal_id}/jawab', [SoalController::class, 'submitAnswer'])->name('siswa.submitAnswer');
+//     Route::get('/siswa/score', [SoalController::class, 'showScore'])->name('siswa.score');
+
+// });
+

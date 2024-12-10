@@ -46,5 +46,8 @@ class User extends Authenticatable
 {
     return $this->belongsTo(User::class, 'email', 'email'); // Relasi berdasarkan user_id
 }
-
+public function soals()
+{
+    return $this->hasMany(Soal::class, 'guru_id');
+}
 }
